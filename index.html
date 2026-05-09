@@ -25,8 +25,85 @@
             background: rgba(30, 41, 59, 0.7);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
-        body, aside, main, p, h1, h2, h3, ul, li, input, button, nav a {
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .dark .modal-content {
+            background: rgba(30, 41, 59, 0.9);
+        }
+        .editor-toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .editor-toolbar button {
+            padding: 8px 12px;
+            border: none;
+            background: #e5e7eb;
+            color: #374151;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            min-width: 40px;
+            min-height: 40px;
+        }
+        .dark .editor-toolbar button {
+            background: #374151;
+            color: #f9fafb;
+        }
+        .editor-toolbar button:hover {
+            background: #d1d5db;
+        }
+        .dark .editor-toolbar button:hover {
+            background: #4b5563;
+        }
+        #noteEditor {
+            min-height: 200px;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            background: white;
+            color: black;
+            outline: none;
+        }
+        .dark #noteEditor {
+            background: #1e293b;
+            color: #f9fafb;
+            border-color: #374151;
+        }
+        #noteEditor:empty:before {
+            content: "Escribe tu nota aquí...";
+            color: #9ca3af;
+            pointer-events: none;
+        }
+        .dark #noteEditor:empty:before {
+            color: #6b7280;
+        }
+        .note-content {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
         }
         .section-content { display: none; }
         .section-content.active { display: block; animation: fadeIn 0.3s ease; }
@@ -35,7 +112,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-[#0f172a] dark:text-[#f8fafc] font-sans flex h-screen overflow-hidden">
 
-    <aside class="w-20 lg:w-64 bg-white dark:bg-[#111827] border-r border-slate-200 dark:border-slate-800 flex flex-col p-4 shadow-sm">
+    <aside class="w-16 lg:w-64 bg-white dark:bg-[#111827] border-r border-slate-200 dark:border-slate-800 flex flex-col p-4 shadow-sm">
         <div class="mb-10 flex flex-col items-center px-2 text-center">
             <h1 class="text-2xl font-bold text-blue-600 dark:text-blue-400 italic">ProductivIA</h1>
             <button id="theme-toggle" class="mt-4 p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 hover:opacity-90 transition">
@@ -152,10 +229,19 @@
         </div>
 
         <!-- SECCIÓN: NOTAS -->
-        <div id="notas" class="section-content text-center py-20">
-            <i class="fas fa-edit text-6xl text-slate-200 mb-4"></i>
-            <h2 class="text-2xl font-bold">Sección de Notas</h2>
-            <p class="text-slate-400">Próximamente... estamos en desarrollo.</p>
+        <div id="notas" class="section-content">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold">Notas Diarias 📝</h2>
+                <p class="text-slate-500 dark:text-slate-400">Anota cosas de la vida diaria relacionadas con tus tareas.</p>
+            </header>
+
+            <div class="glass-card p-6 rounded-3xl mb-8 text-center">
+                <button onclick="openNoteModal()" class="bg-yellow-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-yellow-700 transition">+ Crear Nueva Nota</button>
+            </div>
+
+            <div id="noteList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Las notas aparecerán aquí -->
+            </div>
         </div>
 
         <!-- SECCIÓN: CALENDARIO -->
@@ -166,6 +252,25 @@
         </div>
 
     </main>
+
+    <!-- Modal para editar/agregar notas -->
+    <div id="noteModal" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <h3 id="modalTitle" class="text-xl font-bold mb-4">Nueva Nota</h3>
+            <div class="editor-toolbar">
+                <button onclick="formatText('bold')"><i class="fas fa-bold"></i></button>
+                <button onclick="formatText('italic')"><i class="fas fa-italic"></i></button>
+                <button onclick="formatText('underline')"><i class="fas fa-underline"></i></button>
+                <button onclick="formatText('insertUnorderedList')"><i class="fas fa-list-ul"></i></button>
+                <button onclick="formatText('insertOrderedList')"><i class="fas fa-list-ol"></i></button>
+            </div>
+            <div id="noteEditor" contenteditable="true" class="text-sm"></div>
+            <div class="flex justify-end mt-4 space-x-2">
+                <button onclick="closeModal()" class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg">Cancelar</button>
+                <button onclick="saveNote()" class="px-4 py-2 bg-yellow-600 text-white rounded-lg">Guardar</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // 1. Lógica de Navegación
@@ -283,6 +388,89 @@
         if (localStorage.getItem('color-theme') === 'dark') document.documentElement.classList.add('dark');
         
         renderTasks(); // Carga inicial
+
+        // 4. Lógica de Notas
+        let notes = JSON.parse(localStorage.getItem('myNotes')) || [];
+        let editingIndex = -1;
+
+        function renderNotes() {
+            const list = document.getElementById('noteList');
+            list.innerHTML = '';
+            
+            notes.forEach((note, index) => {
+                const card = document.createElement('div');
+                card.className = 'glass-card p-4 rounded-2xl relative';
+                card.innerHTML = `
+                    <div class="note-content mb-4">${note.content}</div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-slate-400">${note.date}</span>
+                        <div>
+                            <button onclick="openNoteModal(${index})" class="text-yellow-500 hover:text-yellow-700 mr-2 transition"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteNote(${index})" class="text-red-500 hover:text-red-700 transition"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+            localStorage.setItem('myNotes', JSON.stringify(notes));
+        }
+
+        function openNoteModal(index = -1) {
+            editingIndex = index;
+            const modal = document.getElementById('noteModal');
+            const editor = document.getElementById('noteEditor');
+            const title = document.getElementById('modalTitle');
+            
+            if (index >= 0) {
+                title.textContent = 'Editar Nota';
+                editor.innerHTML = notes[index].content;
+            } else {
+                title.textContent = 'Nueva Nota';
+                editor.innerHTML = '';
+            }
+            
+            modal.classList.remove('hidden');
+            editor.focus();
+            
+            // Cerrar modal al hacer clic fuera
+            modal.onclick = (e) => {
+                if (e.target === modal) closeModal();
+            };
+        }
+
+        function closeModal() {
+            document.getElementById('noteModal').classList.add('hidden');
+            editingIndex = -1;
+        }
+
+        function saveNote() {
+            const editor = document.getElementById('noteEditor');
+            const content = editor.innerHTML.trim();
+            
+            if (content) {
+                if (editingIndex >= 0) {
+                    notes[editingIndex].content = content;
+                } else {
+                    notes.push({ content, date: new Date().toLocaleDateString() });
+                }
+                renderNotes();
+            }
+            closeModal();
+        }
+
+        function formatText(command) {
+            document.execCommand(command, false, null);
+            document.getElementById('noteEditor').focus();
+        }
+
+        function deleteNote(index) {
+            if (confirm('¿Estás seguro de que quieres eliminar esta nota?')) {
+                notes.splice(index, 1);
+                renderNotes();
+            }
+        }
+
+        renderNotes(); // Carga inicial de notas
     </script>
 </body>
 </html>
