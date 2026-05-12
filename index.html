@@ -118,8 +118,44 @@
         .note-link-button:hover {
             color: #d97706;
         }
-        .section-content { display: none; }
+        .section-content { display: none; position: relative; }
         .section-content.active { display: block; animation: fadeIn 0.3s ease; }
+        .section-close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px;
+            background: rgba(148, 163, 184, 0.9);
+            color: #0f172a;
+            z-index: 30;
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.15);
+            font-size: 1.25rem;
+        }
+        .dark .section-close-btn {
+            background: rgba(30, 41, 59, 0.94);
+            color: #f8fafc;
+        }
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .dark .modal-content {
+            background: rgba(30, 41, 59, 0.9);
+        }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Mobile responsiveness */
@@ -281,7 +317,9 @@
 
         <!-- SECCIÓN: TAREAS -->
         <div id="tareas" class="section-content">
+            <button onclick="closeCurrentSection()" class="section-close-btn lg:hidden" aria-label="Cerrar sección">×</button>
             <header class="mb-8">
+                <button onclick="showSection('dashboard')" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 transition mb-4 lg:hidden">← Volver</button>
                 <h2 class="text-3xl font-bold">Gestor de Tareas ✅</h2>
             </header>
 
@@ -303,6 +341,7 @@
 
         <!-- SECCIÓN: NOTAS -->
         <div id="notas" class="section-content">
+            <button onclick="closeCurrentSection()" class="section-close-btn lg:hidden" aria-label="Cerrar sección">×</button>
             <header class="mb-8">
                 <h2 class="text-3xl font-bold">Notas Diarias 📝</h2>
                 <p class="text-slate-500 dark:text-slate-400">Anota cosas de la vida diaria relacionadas con tus tareas.</p>
@@ -319,6 +358,7 @@
 
         <!-- SECCIÓN: CALENDARIO -->
         <div id="calendario" class="section-content text-center py-20">
+            <button onclick="closeCurrentSection()" class="section-close-btn lg:hidden" aria-label="Cerrar sección">×</button>
             <i class="fas fa-calendar-alt text-6xl text-slate-200 mb-4"></i>
             <h2 class="text-2xl font-bold">Calendario</h2>
             <p class="text-slate-400">Vista de calendario disponible pronto.</p>
@@ -329,6 +369,7 @@
     <!-- Modal para editar/agregar notas -->
     <div id="noteModal" class="modal-backdrop hidden">
         <div class="modal-content" style="max-width: 900px; width: 95%; max-height: 90vh;">
+            <button onclick="closeModal()" class="section-close-btn" aria-label="Cerrar nota">×</button>
             <h3 id="modalTitle" class="text-xl font-bold mb-4">Nueva Nota</h3>
             <div class="editor-toolbar mb-4 flex flex-wrap gap-2">
                 <button onclick="formatText('bold')" title="Negrita"><i class="fas fa-bold"></i></button>
@@ -354,6 +395,7 @@
     <!-- Modal para editar tareas -->
     <div id="taskModal" class="modal-backdrop hidden">
         <div class="modal-content" style="max-width: 500px; width: 95%;">
+            <button onclick="closeTaskModal()" class="section-close-btn" aria-label="Cerrar tarea">×</button>
             <h3 class="text-xl font-bold mb-4">Editar Tarea</h3>
             <div class="space-y-4">
                 <input type="text" id="editTaskText" placeholder="Título de la tarea" class="w-full p-3 rounded-xl border dark:border-slate-700 dark:bg-[#1e293b] focus:ring-2 focus:ring-blue-500 outline-none">
@@ -392,6 +434,10 @@
             if (activeNav) {
                 activeNav.classList.add('bg-blue-50', 'text-blue-600', 'dark:bg-blue-950/50');
             }
+        }
+
+        function closeCurrentSection() {
+            showSection('dashboard');
         }
 
         function goToNewTask() {
