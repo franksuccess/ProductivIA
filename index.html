@@ -172,11 +172,16 @@
 <body class="bg-slate-50 text-slate-800 dark:bg-[#0f172a] dark:text-[#f8fafc] font-sans flex h-screen overflow-hidden">
 
     <aside id="sidebar" class="w-16 lg:w-64 bg-white dark:bg-[#111827] border-r border-slate-200 dark:border-slate-800 flex flex-col p-4 shadow-sm">
-        <div class="mb-10 flex flex-col items-center px-2 text-center">
-            <h1 class="text-2xl font-bold text-blue-600 dark:text-blue-400 italic">ProductivIA</h1>
-            <button id="theme-toggle" class="mt-4 p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 hover:opacity-90 transition">
-                <i id="theme-icon" class="fas fa-moon text-lg dark:hidden"></i>
-                <i class="fas fa-sun text-lg hidden dark:block"></i>
+        <div class="mb-10 flex items-center justify-between px-2">
+            <div class="flex flex-col items-center text-center flex-1">
+                <h1 class="text-2xl font-bold text-blue-600 dark:text-blue-400 italic">ProductivIA</h1>
+                <button id="theme-toggle" class="mt-4 p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 hover:opacity-90 transition">
+                    <i id="theme-icon" class="fas fa-moon text-lg dark:hidden"></i>
+                    <i class="fas fa-sun text-lg hidden dark:block"></i>
+                </button>
+            </div>
+            <button id="close-sidebar" class="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 hover:opacity-90 transition">
+                <i class="fas fa-times"></i>
             </button>
         </div>
         
@@ -210,7 +215,7 @@
         <!-- SECCIÓN: DASHBOARD -->
         <div id="dashboard" class="section-content active">
             <header class="flex justify-between items-center mb-8">
-                <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 hover:opacity-90 transition">
+                <button id="hamburger-btn" onclick="toggleSidebar()" class="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 hover:opacity-90 transition">
                     <i class="fas fa-bars"></i>
                 </button>
                 <div>
@@ -398,6 +403,21 @@
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('open');
         }
+
+        // Event listeners for sidebar
+        document.getElementById('close-sidebar').addEventListener('click', toggleSidebar);
+        document.getElementById('hamburger-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+        document.querySelector('main').addEventListener('click', () => {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar.classList.contains('open')) {
+                toggleSidebar();
+            }
+        });
+        document.getElementById('sidebar').addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
 
         // 2. Lógica de Tareas
         let tasks = JSON.parse(localStorage.getItem('myTasks')) || [];
