@@ -105,14 +105,73 @@
             overflow-wrap: break-word;
             white-space: pre-wrap;
         }
+        .highlight-note {
+            border: 2px solid #f59e0b;
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15);
+        }
+        .note-link-button {
+            border: none;
+            background: transparent;
+            color: #f59e0b;
+            cursor: pointer;
+        }
+        .note-link-button:hover {
+            color: #d97706;
+        }
         .section-content { display: none; }
         .section-content.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Mobile responsiveness */
+        @media (max-width: 767px) {
+            h1 { font-size: 1.25rem; }
+            h2 { font-size: 1.5rem; }
+            main { padding: 1rem; }
+            #sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                z-index: 50;
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+                width: 250px; /* Adjust width for mobile */
+            }
+            #sidebar.open {
+                transform: translateX(0);
+            }
+            .new-task-btn {
+                position: fixed;
+                bottom: 1rem;
+                right: 1rem;
+                width: 3rem;
+                height: 3rem;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 40;
+            }
+            .new-task-btn span {
+                display: none;
+            }
+            .new-task-btn i {
+                display: block;
+            }
+        }
+        @media (min-width: 1024px) {
+            #sidebar {
+                position: static;
+                transform: none;
+                height: auto;
+                width: auto;
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-[#0f172a] dark:text-[#f8fafc] font-sans flex h-screen overflow-hidden">
 
-    <aside class="w-16 lg:w-64 bg-white dark:bg-[#111827] border-r border-slate-200 dark:border-slate-800 flex flex-col p-4 shadow-sm">
+    <aside id="sidebar" class="w-16 lg:w-64 bg-white dark:bg-[#111827] border-r border-slate-200 dark:border-slate-800 flex flex-col p-4 shadow-sm">
         <div class="mb-10 flex flex-col items-center px-2 text-center">
             <h1 class="text-2xl font-bold text-blue-600 dark:text-blue-400 italic">ProductivIA</h1>
             <button id="theme-toggle" class="mt-4 p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 hover:opacity-90 transition">
@@ -151,13 +210,16 @@
         <!-- SECCIÓN: DASHBOARD -->
         <div id="dashboard" class="section-content active">
             <header class="flex justify-between items-center mb-8">
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 hover:opacity-90 transition">
+                    <i class="fas fa-bars"></i>
+                </button>
                 <div>
                     <h2 class="text-3xl font-bold">¡Hola de nuevo! 👋</h2>
                     <p class="text-slate-500 dark:text-slate-400">Aquí tienes un resumen de tus secciones.</p>
                 </div>
                 <div class="flex space-x-3">
                     <button class="bg-white dark:bg-[#1e293b] border dark:border-slate-700 p-2 rounded-full shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800"><i class="fas fa-search"></i></button>
-                    <button onclick="goToNewTask()" class="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-xl shadow-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition">+ Nueva Tarea</button>
+                    <button onclick="goToNewTask()" class="new-task-btn bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-xl shadow-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition"><i class="fas fa-plus"></i><span>+ Nueva Tarea</span></button>
                 </div>
             </header>
 
@@ -219,6 +281,9 @@
                 <div class="flex flex-wrap gap-4">
                     <input type="text" id="taskInput" placeholder="¿Qué hay que hacer?" class="flex-1 min-w-[200px] p-3 rounded-xl border dark:border-slate-700 dark:bg-[#1e293b] focus:ring-2 focus:ring-blue-500 outline-none">
                     <input type="date" id="taskDate" class="p-3 rounded-xl border dark:border-slate-700 dark:bg-[#1e293b] outline-none">
+                    <select id="taskNoteLink" class="p-3 rounded-xl border dark:border-slate-700 dark:bg-[#1e293b] outline-none min-w-[220px]">
+                        <option value="">Vincular nota...</option>
+                    </select>
                     <button onclick="addTask()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition">+ Añadir</button>
                 </div>
             </div>
@@ -255,16 +320,22 @@
 
     <!-- Modal para editar/agregar notas -->
     <div id="noteModal" class="modal-backdrop hidden">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 900px; width: 95%; max-height: 90vh;">
             <h3 id="modalTitle" class="text-xl font-bold mb-4">Nueva Nota</h3>
-            <div class="editor-toolbar">
-                <button onclick="formatText('bold')"><i class="fas fa-bold"></i></button>
-                <button onclick="formatText('italic')"><i class="fas fa-italic"></i></button>
-                <button onclick="formatText('underline')"><i class="fas fa-underline"></i></button>
-                <button onclick="formatText('insertUnorderedList')"><i class="fas fa-list-ul"></i></button>
-                <button onclick="formatText('insertOrderedList')"><i class="fas fa-list-ol"></i></button>
+            <div class="editor-toolbar mb-4 flex flex-wrap gap-2">
+                <button onclick="formatText('bold')" title="Negrita"><i class="fas fa-bold"></i></button>
+                <button onclick="formatText('italic')" title="Cursiva"><i class="fas fa-italic"></i></button>
+                <button onclick="formatText('underline')" title="Subrayado"><i class="fas fa-underline"></i></button>
+                <button onclick="formatText('insertUnorderedList')" title="Lista desordenada"><i class="fas fa-list-ul"></i></button>
+                <button onclick="formatText('insertOrderedList')" title="Lista ordenada"><i class="fas fa-list-ol"></i></button>
+                <button onclick="insertImage()" title="Insertar imagen"><i class="fas fa-image"></i></button>
+                <input type="file" id="imageInput" accept="image/*" multiple style="display: none;">
             </div>
-            <div id="noteEditor" contenteditable="true" class="text-sm"></div>
+            <div id="noteEditor" contenteditable="true" class="text-sm min-h-[400px] max-h-[500px] overflow-y-auto p-4 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"></div>
+            <div class="image-upload-area mt-4" onclick="document.getElementById('imageInput').click()">
+                <i class="fas fa-cloud-upload-alt text-2xl text-gray-400 mb-2"></i>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Arrastra imágenes aquí o haz clic para seleccionar</p>
+            </div>
             <div class="flex justify-end mt-4 space-x-2">
                 <button onclick="closeModal()" class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg">Cancelar</button>
                 <button onclick="saveNote()" class="px-4 py-2 bg-yellow-600 text-white rounded-lg">Guardar</button>
@@ -323,6 +394,11 @@
 
         setupDashboardClicks();
 
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
         // 2. Lógica de Tareas
         let tasks = JSON.parse(localStorage.getItem('myTasks')) || [];
 
@@ -332,6 +408,7 @@
             
             tasks.forEach((task, index) => {
                 const isOverdue = new Date(task.date) < new Date().setHours(0,0,0,0) && !task.completed;
+                const note = task.noteId != null ? notes.find(n => n.id === task.noteId) : null;
                 const card = document.createElement('div');
                 card.className = `glass-card p-4 rounded-2xl flex items-center justify-between ${isOverdue ? 'border-l-4 border-red-500' : ''}`;
                 card.innerHTML = `
@@ -340,6 +417,7 @@
                         <div>
                             <p class="font-medium ${task.completed ? 'line-through opacity-50' : ''}">${task.text}</p>
                             <span class="text-xs text-slate-400"><i class="far fa-calendar-alt mr-1"></i>${task.date || 'Sin fecha'}</span>
+                            ${note ? `<button class="note-link-button ml-2" onclick="openNoteById(${task.noteId})" title="Ir a nota vinculada"><i class="fas fa-link"></i> Nota</button>` : ''}
                         </div>
                     </div>
                     <button onclick="deleteTask(${index})" class="text-slate-300 hover:text-red-500 transition"><i class="fas fa-trash"></i></button>
@@ -352,18 +430,14 @@
         function addTask() {
             const text = document.getElementById('taskInput').value;
             const date = document.getElementById('taskDate').value;
+            const noteId = document.getElementById('taskNoteLink').value;
             const trimmedText = text.trim();
             if (trimmedText) {
-                // 1. Añadimos a la lista en memoria RAM
-                tasks.push({ text: trimmedText, date, completed: false });
-                
-                // 2. Limpiamos el input
+                tasks.push({ text: trimmedText, date, completed: false, noteId: noteId ? Number(noteId) : null });
                 document.getElementById('taskInput').value = '';
-                
-                // 3. ACTUALIZAMOS EL LOCALSTORAGE (Aquí está la magia)
+                document.getElementById('taskDate').value = '';
+                document.getElementById('taskNoteLink').value = '';
                 localStorage.setItem('myTasks', JSON.stringify(tasks));
-                
-                // 4. Dibujamos de nuevo en pantalla
                 renderTasks();
             }
         }
@@ -371,6 +445,20 @@
         function toggleTask(index) {
             tasks[index].completed = !tasks[index].completed;
             renderTasks();
+        }
+
+        function openNoteById(id) {
+            highlightedNoteId = id;
+            showSection('notas');
+            renderNotes();
+            const card = document.getElementById(`note-card-${id}`);
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => {
+                    highlightedNoteId = null;
+                    renderNotes();
+                }, 3000);
+            }
         }
 
         function deleteTask(index) {
@@ -387,19 +475,29 @@
 
         if (localStorage.getItem('color-theme') === 'dark') document.documentElement.classList.add('dark');
         
-        renderTasks(); // Carga inicial
-
         // 4. Lógica de Notas
         let notes = JSON.parse(localStorage.getItem('myNotes')) || [];
         let editingIndex = -1;
+        let highlightedNoteId = null;
+
+        function normalizeNoteIds() {
+            notes = notes.map(note => ({
+                id: note.id || Date.now() + Math.floor(Math.random() * 1000),
+                content: note.content,
+                date: note.date
+            }));
+            localStorage.setItem('myNotes', JSON.stringify(notes));
+        }
 
         function renderNotes() {
+            normalizeNoteIds();
             const list = document.getElementById('noteList');
             list.innerHTML = '';
             
             notes.forEach((note, index) => {
                 const card = document.createElement('div');
-                card.className = 'glass-card p-4 rounded-2xl relative';
+                card.id = `note-card-${note.id}`;
+                card.className = `glass-card p-4 rounded-2xl relative ${note.id === highlightedNoteId ? 'highlight-note' : ''}`;
                 card.innerHTML = `
                     <div class="note-content mb-4">${note.content}</div>
                     <div class="flex justify-between items-center">
@@ -412,7 +510,19 @@
                 `;
                 list.appendChild(card);
             });
+            populateNoteLinkOptions();
             localStorage.setItem('myNotes', JSON.stringify(notes));
+        }
+
+        function populateNoteLinkOptions() {
+            const select = document.getElementById('taskNoteLink');
+            select.innerHTML = '<option value="">Vincular nota...</option>';
+            notes.forEach(note => {
+                const option = document.createElement('option');
+                option.value = note.id;
+                option.textContent = note.content.replace(/<[^>]+>/g, '').slice(0, 40) || 'Nota sin título';
+                select.appendChild(option);
+            });
         }
 
         function openNoteModal(index = -1) {
@@ -467,10 +577,12 @@
             if (confirm('¿Estás seguro de que quieres eliminar esta nota?')) {
                 notes.splice(index, 1);
                 renderNotes();
+                renderTasks();
             }
         }
 
-        renderNotes(); // Carga inicial de notas
+        renderNotes();
+        renderTasks(); // Carga inicial
     </script>
 </body>
 </html>
